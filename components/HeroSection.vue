@@ -38,7 +38,6 @@
     align-items: center;
     background: linear-gradient(135deg, rgba(255,78,138,0.1) 0%, rgba(138,79,255,0.1) 100%);
     margin-top: 20px;
-    border-radius: 30px;
     overflow: hidden;
     position: relative;
   }
