@@ -1,90 +1,60 @@
-
 <template>
   <section class="section customizer" id="personalizar">
     <div class="container">
       <h2 class="section-title">Crie Sua Capinha</h2>
-      <p class="section-subtitle">Use nossa ferramenta interativa para personalizar sua capinha exatamente como você deseja.</p>
-      
+      <p class="section-subtitle">Use nossa ferramenta interativa para personalizar sua capinha exatamente como você
+        deseja.</p>
+
       <div class="customizer-container">
-        <div class="customizer-preview" :style="{ backgroundColor: backgroundColors[selectedColorIndex] }">
-          <!-- Preview do Celular -->
-          <div class="phone-mockup" :class="phoneModel.replace(/\s+/g, '-').toLowerCase()">
-            <!-- Imagem de fundo personalizada -->
-            <div class="custom-image-container" v-if="imagePreview">
-              <img 
-                :src="imagePreview" 
-                alt="Imagem personalizada" 
-                class="custom-image"
-                :style="{
-                  width: `${imageScale * 100}%`,
-                  height: `${imageScale * 100}%`,
-                  transform: `translate(${imagePositionX}px, ${imagePositionY}px)`,
-                  objectFit: 'cover'
-                }"
-                @mousedown="startImageDrag"
-                @touchstart="startImageDrag"
-                ref="customImage"
-              >
+        <div class="customizer-preview">
+          <div class="selectModel">
+            <div class="form-group">
+              <label class="form-label">Modelo do Celular</label>
+              <select class="form-control" v-model="phoneModel">
+                <option v-for="model in phoneModels" :key="model">{{ model }}</option>
+              </select>
             </div>
-            
-            <!-- Texto personalizado -->
-            <div 
-              class="custom-text-container" 
-              v-if="customText"
-              :style="{
-                justifyContent: textPositionH,
-                alignItems: textPositionV,
-                textAlign: textAlign
-              }"
-            >
-              <p 
-                :class="'font-' + fontStyle.toLowerCase()" 
-                :style="{ 
-                  color: getContrastColor(), 
-                  fontSize: `${textSize}px`,
-                  transform: `translate(${textPositionX}px, ${textPositionY}px)`
-                }"
-                @mousedown="startTextDrag"
-                @touchstart="startTextDrag"
-                ref="customText"
-              >
+          </div>
+          <div class="phone-mockup" :class="phoneModel.replace(/\s+/g, '-').toLowerCase()">
+            <div class="custom-image-container" v-if="imagePreview">
+              <img :src="imagePreview" alt="Imagem personalizada" class="custom-image" :style="{
+                width: `${imageScale * 100}%`,
+                height: `${imageScale * 100}%`,
+                transform: `translate(${imagePositionX}px, ${imagePositionY}px)`,
+                objectFit: 'contain'  /* Alterado de 'cover' para 'contain' */
+              }" @mousedown="startImageDrag" @touchstart="startImageDrag" ref="customImage">
+            </div>
+            <div class="custom-text-container" v-if="customText" :style="{
+              justifyContent: textPositionH,
+              alignItems: textPositionV,
+              textAlign: textAlign
+            }">
+              <p :class="'font-' + fontStyle.toLowerCase()" :style="{
+                color: textColor,
+                fontSize: `${textSize}px`,
+                transform: `translate(${textPositionX}px, ${textPositionY}px)`,
+                textShadow: textOutlineEnabled ? getTextOutlineShadow() : 'none'
+              }" @mousedown="startTextDrag" @touchstart="startTextDrag" ref="customText">
                 {{ customText }}
               </p>
             </div>
-            
-            <!-- Overlay com detalhe do modelo -->
-            <div class="model-overlay">
-              <span>{{ phoneModel }}</span>
-              <span>{{ caseType }}</span>
-            </div>
           </div>
+
+
         </div>
-        
+
         <div class="customizer-form">
-          <div class="form-group">
-            <label class="form-label">Modelo do Celular</label>
-            <select class="form-control" v-model="phoneModel">
-              <option v-for="model in phoneModels" :key="model">{{ model }}</option>
-            </select>
-          </div>
-          
-          <div class="form-group">
-            <label class="form-label">Tipo de Capinha</label>
-            <select class="form-control" v-model="caseType">
-              <option v-for="type in caseTypes" :key="type">{{ type }}</option>
-            </select>
-          </div>
-          
+
           <div class="form-group">
             <label class="form-label">Enviar Foto</label>
             <input type="file" class="form-control" @change="handleFileUpload" accept="image/*">
-            
+
             <div v-if="imagePreview" class="image-controls">
               <div class="control-group">
                 <label>Tamanho:</label>
                 <input type="range" min="0.1" max="2" step="0.05" v-model="imageScale">
               </div>
-              
+
               <div class="control-buttons">
                 <button @click="removeImage" class="remove-btn">
                   Remover Imagem
@@ -93,93 +63,106 @@
                   Centralizar
                 </button>
               </div>
-              
+
               <p class="control-hint">Clique e arraste para posicionar a imagem</p>
             </div>
           </div>
-          
+
           <div class="form-group">
             <label class="form-label">Escreva Sua Frase</label>
             <input type="text" class="form-control" placeholder="Escreva sua frase aqui..." v-model="customText">
-            
+
             <div v-if="customText" class="text-controls">
               <div class="control-group">
                 <label>Tamanho da Fonte:</label>
-                <input type="range" min="12" max="36" step="1" v-model="textSize">
+                <input type="range" min="12" max="46" step="1" v-model="textSize">
               </div>
-              
+
               <div class="control-group">
                 <label>Posição Horizontal:</label>
                 <div class="btn-group">
-                  <button 
-                    v-for="pos in textHorizontalPositions" 
-                    :key="pos.value" 
+                  <button v-for="pos in textHorizontalPositions" :key="pos.value"
                     @click="setTextHorizontalPosition(pos.value)"
-                    :class="['position-btn', textPositionH === pos.value ? 'active' : '']"
-                    :title="pos.label"
-                  >
+                    :class="['position-btn', textPositionH === pos.value ? 'active' : '']" :title="pos.label">
                     <span :class="'icon-' + pos.icon"></span>
                   </button>
                 </div>
               </div>
-              
+
               <div class="control-group">
                 <label>Posição Vertical:</label>
                 <div class="btn-group">
-                  <button 
-                    v-for="pos in textVerticalPositions" 
-                    :key="pos.value" 
+                  <button v-for="pos in textVerticalPositions" :key="pos.value"
                     @click="setTextVerticalPosition(pos.value)"
-                    :class="['position-btn', textPositionV === pos.value ? 'active' : '']"
-                    :title="pos.label"
-                  >
+                    :class="['position-btn', textPositionV === pos.value ? 'active' : '']" :title="pos.label">
                     <span :class="'icon-' + pos.icon"></span>
                   </button>
                 </div>
               </div>
-              
+
               <div class="control-group">
                 <label>Alinhamento:</label>
                 <div class="btn-group">
-                  <button 
-                    v-for="align in textAlignOptions" 
-                    :key="align.value" 
-                    @click="setTextAlign(align.value)"
-                    :class="['position-btn', textAlign === align.value ? 'active' : '']"
-                    :title="align.label"
-                  >
+                  <button v-for="align in textAlignOptions" :key="align.value" @click="setTextAlign(align.value)"
+                    :class="['position-btn', textAlign === align.value ? 'active' : '']" :title="align.label">
                     <span :class="'icon-' + align.icon"></span>
                   </button>
                 </div>
               </div>
-              
+
               <p class="control-hint">Clique e arraste para ajustar a posição do texto</p>
             </div>
           </div>
-          
+
           <div class="form-group">
-            <label class="form-label">Cor de Fundo</label>
+            <label class="form-label">Cor do Texto</label>
             <div class="color-options">
-              <div 
-                v-for="(color, index) in backgroundColors" 
-                :key="index"
-                class="color-option" 
-                :class="{ active: selectedColorIndex === index }"
-                :style="{ backgroundColor: color }"
-                @click="selectColor(index)">
+              <div v-for="(color, index) in textColors" :key="index" class="color-option"
+                :class="{ active: textColor === color }" :style="{ backgroundColor: color }"
+                @click="selectTextColor(color)">
               </div>
             </div>
           </div>
-          
+          <div class="form-group">
+            <label class="form-label">Contorno do Texto</label>
+            <div class="outline-controls">
+              <div class="toggle-control">
+                <input type="checkbox" id="outline-toggle" v-model="textOutlineEnabled">
+                <label for="outline-toggle"> Ativar contorno</label>
+              </div>
+
+              <div v-if="textOutlineEnabled" class="outline-options">
+                <div class="control-group">
+                  <label>Cor do Contorno:</label>
+                  <div class="color-options">
+                    <div v-for="(color, index) in textOutlineColors" :key="'outline-' + index" class="color-option"
+                      :class="{ active: textOutlineColor === color }" :style="{ backgroundColor: color }"
+                      @click="selectOutlineColor(color)">
+                    </div>
+                  </div>
+                </div>
+
+                <div class="control-group">
+                  <label>Espessura do Contorno:</label>
+                  <input type="range" min="1" max="5" step="0.5" v-model="textOutlineWidth">
+                  <span class="range-value">{{ textOutlineWidth }}px</span>
+                </div>
+              </div>
+            </div>
+          </div>
           <div class="form-group">
             <label class="form-label">Estilo de Fonte</label>
             <select class="form-control" v-model="fontStyle">
               <option v-for="style in fontStyles" :key="style">{{ style }}</option>
             </select>
           </div>
-          
+          <div class="model-info">
+            <span>{{ phoneModel }} - {{ caseType }}</span>
+            <span class="price-tag">R$ {{ price.toFixed(2).replace('.', ',') }}</span>
+          </div>
           <button @click="addToCart" class="btn" style="width: 100%; text-align: center;">Adicionar ao Carrinho</button>
         </div>
+
       </div>
     </div>
   </section>
@@ -190,6 +173,13 @@ export default {
   name: 'CustomizerSection',
   data() {
     return {
+      textColor: '#000000',
+      textColors: ['#000000', '#FFFFFF', '#F5A623', '#6C63FF', '#FF5678', '#4CAF50', '#9C27B0'],
+      textOutlineEnabled: false,
+      textOutlineColor: '#FFFFFF',
+      textOutlineWidth: 2,
+      textOutlineColors: ['#000000', '#FFFFFF', '#F5A623', '#6C63FF', '#FF5678', '#4CAF50', '#9C27B0'],
+      selectedTextColorIndex: 0,
       phoneModel: 'iPhone 15 Pro Max',
       phoneModels: [
         'iPhone 15 Pro Max',
@@ -202,7 +192,6 @@ export default {
         'Xiaomi 14'
       ],
       caseType: 'Classic',
-      caseTypes: ['Classic', 'Premium', 'Glitter', 'Transparente'],
       selectedFile: null,
       imagePreview: null,
       imageScale: 1,
@@ -211,18 +200,17 @@ export default {
       isDraggingImage: false,
       startX: 0,
       startY: 0,
-      
       customText: '',
       textSize: 20,
-      textPositionH: 'center', // flex-start, center, flex-end
-      textPositionV: 'center', // flex-start, center, flex-end
-      textAlign: 'center',     // left, center, right
+      textPositionH: 'center',
+      textPositionV: 'center',
+      textAlign: 'center',
       textPositionX: 0,
       textPositionY: 0,
       isDraggingText: false,
       textStartX: 0,
       textStartY: 0,
-      
+
       textHorizontalPositions: [
         { value: 'flex-start', label: 'Esquerda', icon: 'left' },
         { value: 'center', label: 'Centro', icon: 'center-h' },
@@ -238,24 +226,40 @@ export default {
         { value: 'center', label: 'Centralizado', icon: 'align-center' },
         { value: 'right', label: 'Alinhado à Direita', icon: 'align-right' }
       ],
-      
-      backgroundColors: ['#FFFFFF', '#000000', '#F5A623', '#6C63FF', '#FF5678'],
-      selectedColorIndex: 0,
       fontStyle: 'Moderna',
       fontStyles: ['Moderna', 'Clássica', 'Manuscrita', 'Divertida'],
       price: 59.90
     }
   },
   methods: {
+    selectOutlineColor(color) {
+      this.textOutlineColor = color;
+    },
+    getTextOutlineShadow() {
+      const width = this.textOutlineWidth;
+      const color = this.textOutlineColor;
+
+      return `
+    -${width}px -${width}px 0 ${color},
+    0 -${width}px 0 ${color},
+    ${width}px -${width}px 0 ${color},
+    ${width}px 0 0 ${color},
+    ${width}px ${width}px 0 ${color},
+    0 ${width}px 0 ${color},
+    -${width}px ${width}px 0 ${color},
+    -${width}px 0 0 ${color}
+  `;
+    },
+    selectTextColor(color) {
+      this.textColor = color;
+    },
     handleFileUpload(event) {
       this.selectedFile = event.target.files[0];
-      
-      // Criar preview da imagem
+
       if (this.selectedFile) {
         const reader = new FileReader();
         reader.onload = (e) => {
           this.imagePreview = e.target.result;
-          // Reset posição e escala
           this.resetImagePosition();
         };
         reader.readAsDataURL(this.selectedFile);
@@ -267,8 +271,7 @@ export default {
       this.imageScale = 1;
       this.imagePositionX = 0;
       this.imagePositionY = 0;
-      
-      // Resetar o input file
+
       const fileInput = document.querySelector('input[type="file"]');
       if (fileInput) {
         fileInput.value = '';
@@ -280,12 +283,9 @@ export default {
       this.imagePositionY = 0;
     },
     startImageDrag(event) {
-      // Previne comportamento padrão para evitar problemas com drag&drop
       event.preventDefault();
-      
+
       this.isDraggingImage = true;
-      
-      // Captura coordenadas iniciais (suporta touch e mouse)
       if (event.type === 'touchstart') {
         this.startX = event.touches[0].clientX;
         this.startY = event.touches[0].clientY;
@@ -293,8 +293,7 @@ export default {
         this.startX = event.clientX;
         this.startY = event.clientY;
       }
-      
-      // Adiciona event listeners para movimento e final do drag
+
       document.addEventListener('mousemove', this.moveImage);
       document.addEventListener('touchmove', this.moveImage, { passive: false });
       document.addEventListener('mouseup', this.stopImageDrag);
@@ -302,13 +301,11 @@ export default {
     },
     moveImage(event) {
       if (!this.isDraggingImage) return;
-      
-      // Previne comportamento padrão para evitar problemas com scroll em touch
+
       event.preventDefault();
-      
+
       let currentX, currentY;
-      
-      // Captura coordenadas atuais (suporta touch e mouse)
+
       if (event.type === 'touchmove') {
         currentX = event.touches[0].clientX;
         currentY = event.touches[0].clientY;
@@ -316,22 +313,19 @@ export default {
         currentX = event.clientX;
         currentY = event.clientY;
       }
-      
-      // Calcula a mudança de posição
+
       const deltaX = currentX - this.startX;
       const deltaY = currentY - this.startY;
-      
-      // Atualiza posição inicial para o próximo movimento
+
       this.startX = currentX;
       this.startY = currentY;
-      
-      // Atualiza a posição da imagem
+
       this.imagePositionX += deltaX;
       this.imagePositionY += deltaY;
     },
     stopImageDrag() {
       this.isDraggingImage = false;
-      
+
       // Remove event listeners
       document.removeEventListener('mousemove', this.moveImage);
       document.removeEventListener('touchmove', this.moveImage);
@@ -339,12 +333,10 @@ export default {
       document.removeEventListener('touchend', this.stopImageDrag);
     },
     startTextDrag(event) {
-      // Previne comportamento padrão
       event.preventDefault();
-      
+
       this.isDraggingText = true;
-      
-      // Captura coordenadas iniciais (suporta touch e mouse)
+
       if (event.type === 'touchstart') {
         this.textStartX = event.touches[0].clientX;
         this.textStartY = event.touches[0].clientY;
@@ -352,8 +344,7 @@ export default {
         this.textStartX = event.clientX;
         this.textStartY = event.clientY;
       }
-      
-      // Adiciona event listeners para movimento e final do drag
+
       document.addEventListener('mousemove', this.moveText);
       document.addEventListener('touchmove', this.moveText, { passive: false });
       document.addEventListener('mouseup', this.stopTextDrag);
@@ -361,13 +352,11 @@ export default {
     },
     moveText(event) {
       if (!this.isDraggingText) return;
-      
-      // Previne comportamento padrão
+
       event.preventDefault();
-      
+
       let currentX, currentY;
-      
-      // Captura coordenadas atuais (suporta touch e mouse)
+
       if (event.type === 'touchmove') {
         currentX = event.touches[0].clientX;
         currentY = event.touches[0].clientY;
@@ -375,62 +364,41 @@ export default {
         currentX = event.clientX;
         currentY = event.clientY;
       }
-      
-      // Calcula a mudança de posição
+
       const deltaX = currentX - this.textStartX;
       const deltaY = currentY - this.textStartY;
-      
-      // Atualiza posição inicial para o próximo movimento
+
       this.textStartX = currentX;
       this.textStartY = currentY;
-      
-      // Atualiza a posição do texto
+
       this.textPositionX += deltaX;
       this.textPositionY += deltaY;
     },
     stopTextDrag() {
       this.isDraggingText = false;
-      
-      // Remove event listeners
+
       document.removeEventListener('mousemove', this.moveText);
       document.removeEventListener('touchmove', this.moveText);
       document.removeEventListener('mouseup', this.stopTextDrag);
       document.removeEventListener('touchend', this.stopTextDrag);
     },
-    selectColor(index) {
-      this.selectedColorIndex = index;
-    },
+ 
     setTextHorizontalPosition(position) {
       this.textPositionH = position;
-      this.textPositionX = 0; // Reset fine positioning when using preset positions
+      this.textPositionX = 0;
     },
     setTextVerticalPosition(position) {
       this.textPositionV = position;
-      this.textPositionY = 0; // Reset fine positioning when using preset positions
+      this.textPositionY = 0;
     },
     setTextAlign(align) {
       this.textAlign = align;
     },
-    getContrastColor() {
-      // Detectar se a cor de fundo é escura para usar texto claro ou escuro
-      const color = this.backgroundColors[this.selectedColorIndex];
-      
-      // Converter cor hex para RGB
-      const r = parseInt(color.slice(1, 3), 16);
-      const g = parseInt(color.slice(3, 5), 16);
-      const b = parseInt(color.slice(5, 7), 16);
-      
-      // Calcular brilho (fórmula YIQ)
-      const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-      
-      // Retornar cor do texto baseado no brilho do fundo
-      return brightness > 128 ? '#000000' : '#FFFFFF';
-    },
+
     generateUniqueId() {
       return 'capinha_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
     },
     addToCart() {
-      // Criar objeto do produto personalizado
       const productData = {
         id: this.generateUniqueId(),
         name: `Capinha Personalizada ${this.caseType}`,
@@ -441,7 +409,6 @@ export default {
           phoneModel: this.phoneModel,
           caseType: this.caseType,
           customText: this.customText,
-          backgroundColor: this.backgroundColors[this.selectedColorIndex],
           fontStyle: this.fontStyle,
           textSize: this.textSize,
           textPositionH: this.textPositionH,
@@ -454,51 +421,36 @@ export default {
           imagePositionY: this.imagePositionY
         }
       };
-      
+
       // Disparar evento para adicionar ao carrinho
       window.dispatchEvent(
         new CustomEvent('add-to-cart', {
           detail: { quantity: 1 }
         })
       );
-      
-      // Disparar evento para adicionar o item específico ao carrinho
+
       window.dispatchEvent(
         new CustomEvent('add-item-to-cart', {
           detail: productData
         })
       );
-      
-      // Feedback visual para o usuário
+
       alert('Capinha personalizada adicionada ao carrinho!');
     }
   },
   mounted() {
-    // Adicionar eventos globais para carregar ao montar o componente
   },
   beforeUnmount() {
-    // Limpar event listeners ao desmontar o componente
-    document.removeEventListener('mousemove', this.moveImage);
-    document.removeEventListener('touchmove', this.moveImage);
-    document.removeEventListener('mouseup', this.stopImageDrag);
-    document.removeEventListener('touchend', this.stopImageDrag);
-    
-    document.removeEventListener('mousemove', this.moveText);
-    document.removeEventListener('touchmove', this.moveText);
-    document.removeEventListener('mouseup', this.stopTextDrag);
-    document.removeEventListener('touchend', this.stopTextDrag);
+  document.removeEventListener('mousemove', this.moveDrag);
+  document.removeEventListener('touchmove', this.moveDrag);
+  document.removeEventListener('mouseup', this.stopDrag);
+  document.removeEventListener('touchend', this.stopDrag);
   }
 }
 </script>
 
 <style scoped>
-:root {
-  --primary: #6C63FF;
-  --secondary: #F5A623;
-  --dark: #333333;
-  --light: #F8F9FA;
-  --accent: #FF5678;
-}
+
 
 .section {
   padding: 5rem 0;
@@ -540,32 +492,6 @@ export default {
   align-items: start;
 }
 
-.customizer-preview {
-  height: 500px;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow: hidden;
-  transition: background-color 0.3s ease;
-}
-
-.phone-mockup {
-  width: 65%;
-  height: 90%;
-  background-color: rgba(255, 255, 255, 0.1);
-  border-radius: 25px;
-  border: 10px solid #444;
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  box-shadow: 0 15px 25px rgba(0, 0, 0, 0.2);
-}
-
 .custom-image-container {
   position: absolute;
   top: 0;
@@ -580,10 +506,13 @@ export default {
 }
 
 .custom-image {
-  cursor: move; /* Indica que é arrastável */
-  transition: transform 0.1s ease; /* Suaviza ajustes de posição */
+  cursor: move;
+  /* Indica que é arrastável */
+  transition: transform 0.1s ease;
+  /* Suaviza ajustes de posição */
   transform-origin: center;
-  will-change: transform; /* Otimização de performance */
+  will-change: transform;
+  /* Otimização de performance */
 }
 
 .custom-text-container {
@@ -594,9 +523,9 @@ export default {
   height: 100%;
   display: flex;
   padding: 20px;
-  text-align: center;
+  box-sizing: border-box;
   z-index: 2;
-  pointer-events: none; /* Permite que o texto não interfira com o arrastar da imagem */
+
 }
 
 .custom-text-container p {
@@ -604,13 +533,14 @@ export default {
   padding: 10px;
   word-wrap: break-word;
   max-width: 100%;
-  cursor: move; /* Indica que é arrastável */
-  pointer-events: auto; /* Permite que o texto seja arrastado */
-  transition: transform 0.1s ease; /* Suaviza ajustes de posição */
-  will-change: transform; /* Otimização de performance */
+  cursor: move;
+  pointer-events: auto;
+  transition: transform 0.1s ease;
+  will-change: transform;
+  position: relative;
+  z-index: 3;
 }
 
-/* Estilos de fontes */
 .font-moderna {
   font-family: 'Arial', sans-serif;
   font-weight: 700;
@@ -948,30 +878,111 @@ export default {
   background-color: #d32f2f;
 }
 
-/* Diferenças de tamanho específicas para modelos de telefone */
-.iphone-15-pro-max {
-  height: 92%;
+
+
+.customizer-preview {
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  box-shadow: none;
+
 }
 
-.samsung-galaxy-s24-ultra {
-  height: 95%;  
-  width: 60%;
+.phone-mockup {
+  width: 350px;
+  aspect-ratio: 9 / 16;
+  background-color: white;
+  border-radius: 25px;
+  border: 10px solid #444;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 15px 25px rgba(0, 0, 0, 0.2);
 }
 
-.xiaomi-14 {
-  height: 88%;
-  width: 62%;
+.selectModel {
+  padding: 50px 0 10px 0;
+}
+
+.model-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 15px 0;
+  font-size: 22px;
+  font-weight: 500;
+  color: #333;
+}
+
+.price-tag {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--secondary);
+  margin-top: 5px;
+}
+
+.model-overlay {
+  display: none;
+}
+.outline-controls {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: 10px;
+}
+
+.toggle-control {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.toggle-control input[type="checkbox"] {
+  margin-right: 10px;
+  width: 18px;
+  height: 18px;
+}
+
+.outline-options {
+  border-top: 1px solid #ddd;
+  padding-top: 10px;
+  margin-top: 5px;
+}
+
+.range-value {
+  display: inline-block;
+  margin-left: 10px;
+  font-size: 14px;
+  color: #666;
+}
+.custom-image-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: visible;
+  /* Alterado de 'hidden' para 'visible' */
+  z-index: 1;
 }
 
 @media (max-width: 992px) {
   .customizer-container {
     grid-template-columns: 1fr;
   }
-  
+
   .customizer-preview {
     height: 350px;
   }
-  
+
   .phone-mockup {
     width: 45%;
     height: 85%;
@@ -982,7 +993,7 @@ export default {
   .section {
     padding: 3rem 0;
   }
-  
+
   .phone-mockup {
     width: 60%;
   }
