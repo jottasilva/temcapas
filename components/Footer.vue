@@ -4,7 +4,7 @@
       <div class="container">
         <div class="footer-grid">
           <div>
-            <h3 class="footer-heading">CellCases</h3>
+            <h3 class="footer-heading">TEMCAPAS</h3>
             <p>Transformando seu celular em uma expressão do seu estilo com capinhas personalizadas de alta qualidade.</p>
             <div class="social-links">
               <a v-for="(social, index) in socialLinks" :key="index" :href="social.link" class="social-link">
@@ -38,7 +38,7 @@
         </div>
         
         <div class="copyright">
-          <p>&copy; {{ new Date().getFullYear() }} CellCases. Todos os direitos reservados.</p>
+          <p>&copy; {{ new Date().getFullYear() }} TemCapas. Todos os direitos reservados.</p>
         </div>
       </div>
     </footer>
