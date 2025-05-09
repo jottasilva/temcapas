@@ -546,6 +546,7 @@ export default {
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
+
 }
 
 .section-title {
@@ -565,10 +566,6 @@ export default {
   max-width: 700px;
   margin-left: auto;
   margin-right: auto;
-}
-
-.customizer {
-  background-color: #f0f2f5;
 }
 
 .customizer-container {
@@ -682,7 +679,6 @@ export default {
   border-color: var(--primary);
 }
 
-/* Controles de imagem e texto */
 .image-controls,
 .text-controls {
   background-color: #f8f9fa;
@@ -954,10 +950,10 @@ export default {
 .customizer-preview {
   height: auto;
   display: flex;
+  width: 90%;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: none;
   box-shadow: none;
 }
 
@@ -1060,7 +1056,7 @@ export default {
 
 @media (max-width: 992px) {
   .customizer-container {
-    grid-template-columns: 1fr;
+    grid-template-columns: 0.8fr;
   }
 
 }
@@ -1080,9 +1076,18 @@ export default {
   .section {
     padding: 3rem 0;
   }
-
+  .customizer-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+  .customizer-form {
+    padding: 2rem;
+    border-radius: 8px;
+    margin: 0 auto;
+  }
   .phone-mockup {
-    width: 80%;
+    width: 100%;
   }
 }
 </style>
