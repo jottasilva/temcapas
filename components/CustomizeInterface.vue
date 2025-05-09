@@ -164,9 +164,7 @@
               <span v-else>Gerando PDF...</span>
             </button>
           </div>
-          <div class="export-help-text">
-            <p>O PDF exportado terá o tamanho real do dispositivo para impressão de gabarito.</p>
-          </div>
+          
         </div>
       </div>
     </div>
@@ -258,7 +256,6 @@ export default {
       return this.deviceDisplaySizes[modelKey] || { width: 190, height: 400 };
     },
 
-    // Computed property para estilizar o mockup
     mockupStyle() {
       return {
         width: `${this.phoneDisplaySize.width}px`,
@@ -266,7 +263,6 @@ export default {
       };
     },
 
-    // Novo computed property para controlar o estilo da imagem
     imageStyle() {
       return {
         width: `${this.imageScale * 100}%`,
@@ -547,7 +543,7 @@ export default {
 }
 
 .container {
-  width: 90%;
+  width: 100%;
   max-width: 1200px;
   margin: 0 auto;
 }
@@ -955,8 +951,6 @@ export default {
   background-color: #d32f2f;
 }
 
-
-
 .customizer-preview {
   height: auto;
   display: flex;
@@ -965,15 +959,16 @@ export default {
   justify-content: center;
   background: none;
   box-shadow: none;
-
 }
 
 .phone-mockup {
-  width: 198.71px;
-  height: 411.31px;
+  width: 10.35vw;
+  height: 38.08vh;
   background-color: white;
   border-radius: 25px;
   border: 4px solid var(--dark);
+  transform: scale(1.2);
+  margin:50px 0;
   position: relative;
   overflow: hidden;
   display: flex;
@@ -1068,14 +1063,6 @@ export default {
     grid-template-columns: 1fr;
   }
 
-  .customizer-preview {
-    height: 350px;
-  }
-
-  .phone-mockup {
-    width: 45%;
-    height: 85%;
-  }
 }
 
 @media print {
@@ -1095,7 +1082,7 @@ export default {
   }
 
   .phone-mockup {
-    width: 60%;
+    width: 80%;
   }
 }
 </style>
