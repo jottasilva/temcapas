@@ -15,14 +15,12 @@
               </select>
             </div>
           </div>
-          <div class="phone-mockup" :class="phoneModel.replace(/\s+/g, '-').toLowerCase()">
+          <div class="phone-mockup" :class="phoneModel.replace(/\s+/g, '-').toLowerCase()" :style="mockupStyle"
+            ref="phoneMockup">
+            <div class="camera"></div>
             <div class="custom-image-container" v-if="imagePreview">
-              <img :src="imagePreview" alt="Imagem personalizada" class="custom-image" :style="{
-                width: `${imageScale * 100}%`,
-                height: `${imageScale * 100}%`,
-                transform: `translate(${imagePositionX}px, ${imagePositionY}px)`,
-                objectFit: 'contain'  /* Alterado de 'cover' para 'contain' */
-              }" @mousedown="startImageDrag" @touchstart="startImageDrag" ref="customImage">
+              <img :src="imagePreview" alt="Imagem personalizada" class="custom-image" :style="imageStyle"
+                @mousedown="startImageDrag" @touchstart="startImageDrag" ref="customImage">
             </div>
             <div class="custom-text-container" v-if="customText" :style="{
               justifyContent: textPositionH,
@@ -39,12 +37,9 @@
               </p>
             </div>
           </div>
-
-
         </div>
 
         <div class="customizer-form">
-
           <div class="form-group">
             <label class="form-label">Enviar Foto</label>
             <input type="file" class="form-control" @change="handleFileUpload" accept="image/*">
@@ -52,7 +47,8 @@
             <div v-if="imagePreview" class="image-controls">
               <div class="control-group">
                 <label>Tamanho:</label>
-                <input type="range" min="0.1" max="2" step="0.05" v-model="imageScale">
+                <input type="range" min="0.1" max="4" step="0.05" v-model="imageScale">
+                <span class="range-value">{{ Math.round(imageScale * 100) }}%</span>
               </div>
 
               <div class="control-buttons">
@@ -144,7 +140,7 @@
 
                 <div class="control-group">
                   <label>Espessura do Contorno:</label>
-                  <input type="range" min="1" max="5" step="0.5" v-model="textOutlineWidth">
+                  <input type="range" min="0.5" max="2" step="0.5" v-model="textOutlineWidth">
                   <span class="range-value">{{ textOutlineWidth }}px</span>
                 </div>
               </div>
@@ -160,15 +156,26 @@
             <span>{{ phoneModel }} - {{ caseType }}</span>
             <span class="price-tag">R$ {{ price.toFixed(2).replace('.', ',') }}</span>
           </div>
-          <button @click="addToCart" class="btn" style="width: 100%; text-align: center;">Adicionar ao Carrinho</button>
-        </div>
 
+          <div class="action-buttons">
+            <button @click="addToCart" class="btn add-to-cart-btn">Adicionar ao Carrinho</button>
+            <button @click="exportToPDF" class="btn export-btn" :disabled="showExportingIndicator">
+              <span v-if="!showExportingIndicator">Exportar Gabarito PDF</span>
+              <span v-else>Gerando PDF...</span>
+            </button>
+          </div>
+          <div class="export-help-text">
+            <p>O PDF exportado terá o tamanho real do dispositivo para impressão de gabarito.</p>
+          </div>
+        </div>
       </div>
     </div>
   </section>
 </template>
 
 <script>
+import pdfExportService from '../services/pdfExpertService';
+
 export default {
   name: 'CustomizerSection',
   data() {
@@ -180,6 +187,19 @@ export default {
       textOutlineWidth: 2,
       textOutlineColors: ['#000000', '#FFFFFF', '#F5A623', '#6C63FF', '#FF5678', '#4CAF50', '#9C27B0'],
       selectedTextColorIndex: 0,
+      isExporting: false,
+      showExportingIndicator: false,
+      deviceDisplaySizes: {
+        'iphone-15-pro-max': { width: 200, height: 410 },
+        'iphone-15-pro': { width: 190, height: 400 },
+        'iphone-15': { width: 190, height: 400 },
+        'iphone-14-pro-max': { width: 200, height: 410 },
+        'samsung-galaxy-s24-ultra': { width: 200, height: 420 },
+        'samsung-galaxy-s24+': { width: 195, height: 410 },
+        'samsung-galaxy-s24': { width: 190, height: 400 },
+        'xiaomi-14': { width: 190, height: 405 },
+      },
+
       phoneModel: 'iPhone 15 Pro Max',
       phoneModels: [
         'iPhone 15 Pro Max',
@@ -195,6 +215,7 @@ export default {
       selectedFile: null,
       imagePreview: null,
       imageScale: 1,
+      maxImageScale: 4,
       imagePositionX: 0,
       imagePositionY: 0,
       isDraggingImage: false,
@@ -231,7 +252,75 @@ export default {
       price: 59.90
     }
   },
+  computed: {
+    phoneDisplaySize() {
+      const modelKey = this.phoneModel.replace(/\s+/g, '-').toLowerCase();
+      return this.deviceDisplaySizes[modelKey] || { width: 190, height: 400 };
+    },
+
+    // Computed property para estilizar o mockup
+    mockupStyle() {
+      return {
+        width: `${this.phoneDisplaySize.width}px`,
+        height: `${this.phoneDisplaySize.height}px`
+      };
+    },
+
+    // Novo computed property para controlar o estilo da imagem
+    imageStyle() {
+      return {
+        width: `${this.imageScale * 100}%`,
+        height: 'auto',
+        maxWidth: 'none',
+        maxHeight: 'none',
+        transform: `translate(${this.imagePositionX}px, ${this.imagePositionY}px)`,
+        objectFit: 'cover'
+      };
+    }
+  },
   methods: {
+    async exportToPDF() {
+      try {
+        if (!this.$refs.phoneMockup) {
+          throw new Error('Elemento de visualização não encontrado');
+        }
+
+        this.showExportingIndicator = true;
+        await this.$nextTick();
+        const mockupClone = this.$refs.phoneMockup.cloneNode(true);
+        mockupClone.style.border = 'none';
+        mockupClone.style.borderRadius = '0';
+        mockupClone.style.boxShadow = 'none';
+        const customImage = mockupClone.querySelector('.custom-image');
+        if (customImage) {
+          customImage.style.objectFit = 'contain';
+          customImage.style.maxWidth = 'none';
+          customImage.style.maxHeight = 'none';
+          customImage.style.width = `${this.imageScale * 100}%`;
+          customImage.style.height = 'auto';
+          customImage.style.transform = `translate(${this.imagePositionX}px, ${this.imagePositionY}px)`;
+        }
+
+        const customizationDetails = {
+          id: this.generateUniqueId(),
+          phoneModel: this.phoneModel || 'Não especificado',
+          caseType: this.caseType || 'Padrão',
+          customText: this.customText || '',
+          fontStyle: this.fontStyle || 'Padrão'
+        };
+
+        const pdfBlob = await pdfExportService.generatePDF(this.$refs.phoneMockup, customizationDetails);
+        const fileName = `capinha-${this.phoneModel.replace(/\s+/g, '-').toLowerCase()}-${Date.now()}.pdf`;
+        pdfExportService.downloadPDF(pdfBlob, fileName);
+
+      } catch (error) {
+        console.error('Erro ao exportar PDF:', error);
+        alert(`Erro ao gerar PDF: ${error.message}`);
+      } finally {
+        this.showExportingIndicator = false;
+      }
+    },
+
     selectOutlineColor(color) {
       this.textOutlineColor = color;
     },
@@ -382,7 +471,7 @@ export default {
       document.removeEventListener('mouseup', this.stopTextDrag);
       document.removeEventListener('touchend', this.stopTextDrag);
     },
- 
+
     setTextHorizontalPosition(position) {
       this.textPositionH = position;
       this.textPositionX = 0;
@@ -421,8 +510,6 @@ export default {
           imagePositionY: this.imagePositionY
         }
       };
-
-      // Disparar evento para adicionar ao carrinho
       window.dispatchEvent(
         new CustomEvent('add-to-cart', {
           detail: { quantity: 1 }
@@ -439,19 +526,22 @@ export default {
     }
   },
   mounted() {
+
   },
   beforeUnmount() {
-  document.removeEventListener('mousemove', this.moveDrag);
-  document.removeEventListener('touchmove', this.moveDrag);
-  document.removeEventListener('mouseup', this.stopDrag);
-  document.removeEventListener('touchend', this.stopDrag);
+    document.removeEventListener('mousemove', this.moveImage);
+    document.removeEventListener('touchmove', this.moveImage);
+    document.removeEventListener('mouseup', this.stopImageDrag);
+    document.removeEventListener('touchend', this.stopImageDrag);
+    document.removeEventListener('mousemove', this.moveText);
+    document.removeEventListener('touchmove', this.moveText);
+    document.removeEventListener('mouseup', this.stopTextDrag);
+    document.removeEventListener('touchend', this.stopTextDrag);
   }
 }
 </script>
 
 <style scoped>
-
-
 .section {
   padding: 5rem 0;
 }
@@ -492,27 +582,16 @@ export default {
   align-items: start;
 }
 
-.custom-image-container {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow: hidden;
-  z-index: 1;
-}
+
 
 .custom-image {
   cursor: move;
-  /* Indica que é arrastável */
   transition: transform 0.1s ease;
-  /* Suaviza ajustes de posição */
   transform-origin: center;
   will-change: transform;
-  /* Otimização de performance */
+  object-fit: cover;
+  max-width: 100%;
+  max-height: 100%;
 }
 
 .custom-text-container {
@@ -525,7 +604,6 @@ export default {
   padding: 20px;
   box-sizing: border-box;
   z-index: 2;
-
 }
 
 .custom-text-container p {
@@ -828,7 +906,6 @@ export default {
   margin-top: 0.5rem;
 }
 
-
 .color-option {
   width: 30px;
   height: 30px;
@@ -892,17 +969,28 @@ export default {
 }
 
 .phone-mockup {
-  width: 350px;
-  aspect-ratio: 9 / 16;
+  width: 198.71px;
+  height: 411.31px;
   background-color: white;
   border-radius: 25px;
-  border: 10px solid #444;
+  border: 4px solid var(--dark);
   position: relative;
   overflow: hidden;
   display: flex;
   justify-content: center;
   align-items: center;
   box-shadow: 0 15px 25px rgba(0, 0, 0, 0.2);
+}
+
+.camera {
+  width: 79.37px;
+  height: 87.87px;
+  border-radius: 18.79px;
+  position: absolute;
+  top: 11.61px;
+  left: 8.9px;
+  z-index: 999;
+  background-color: var(--dark);
 }
 
 .selectModel {
@@ -929,6 +1017,7 @@ export default {
 .model-overlay {
   display: none;
 }
+
 .outline-controls {
   background-color: #f8f9fa;
   border-radius: 8px;
@@ -960,6 +1049,7 @@ export default {
   font-size: 14px;
   color: #666;
 }
+
 .custom-image-container {
   position: absolute;
   top: 0;
@@ -969,8 +1059,7 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
-  overflow: visible;
-  /* Alterado de 'hidden' para 'visible' */
+  overflow: hidden;
   z-index: 1;
 }
 
@@ -986,6 +1075,17 @@ export default {
   .phone-mockup {
     width: 45%;
     height: 85%;
+  }
+}
+
+@media print {
+  .custom-image {
+    object-fit: contain !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    width: auto !important;
+    height: auto !important;
+    transform: none !important;
   }
 }
 
