@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <TheHeader />
+    <TheHeader :cartCount="cartItemCount" @open-cart="openCartModal" />
     <main>
       <HeroSection />
       <HowItWorks />
@@ -8,6 +8,13 @@
       <PopularCases />
       <Testimonials />
       <Features />
+      
+      <CartModal 
+      :isOpen="isCartOpen" 
+      @close="closeCartModal" 
+      @update-count="updateCartCount"
+      ref="cartModal"
+    />
     </main>
     <TheFooter />
   </div>
@@ -22,7 +29,7 @@ import PopularCases from './components/PopularCases.vue'
 import Testimonials from './components/Testmonials.vue'
 import Features from './components/Features.vue'
 import TheFooter from './components/Footer.vue'
-
+import CartModal from './components/CartModal.vue'
 
 export default {
   name: 'App',
@@ -35,6 +42,65 @@ export default {
     Testimonials,
     Features,
     TheFooter,
+
+  },
+  data() {
+    return {
+      isCartOpen: false,
+      cartItemCount: 0,
+      products: [
+        {
+          id: 1,
+          name: "Camiseta Basic",
+          price: 59.90,
+          image: "/assets/product1.jpg",
+          hasOptions: true
+        },
+        {
+          id: 2,
+          name: "Moletom Casual",
+          price: 129.90,
+          image: "/assets/product2.jpg",
+          hasOptions: true
+        },
+        {
+          id: 3,
+          name: "Boné Personalizado",
+          price: 49.90,
+          image: "/assets/product3.jpg",
+          hasOptions: false
+        }
+      ]
+    }
+  },
+  mounted() {
+    // Escutar evento global para atualizar contador do carrinho
+    window.addEventListener('add-item-to-cart', () => {
+      if (this.$refs.cartModal) {
+        // Atualizar contador após adicionar item
+        setTimeout(() => {
+          this.cartItemCount = this.$refs.cartModal.items.reduce(
+            (total, item) => total + item.quantity, 0
+          );
+        }, 100);
+      }
+    });
+  },
+  methods: {
+    openCartModal() {
+      this.isCartOpen = true;
+      document.body.style.overflow = 'hidden'; // Impedir rolagem quando modal estiver aberta
+    },
+    closeCartModal() {
+      this.isCartOpen = false;
+      document.body.style.overflow = ''; // Restaurar rolagem quando modal fechar
+    },
+    updateCartCount(count) {
+      this.cartItemCount = count;
+    }
+  },
+  beforeUnmount() {
+    window.removeEventListener('add-item-to-cart', this.updateCartCount);
   }
 }
 </script>

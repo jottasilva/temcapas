@@ -30,7 +30,7 @@
               <p :class="'font-' + fontStyle.toLowerCase()" :style="{
                 color: textColor,
                 fontSize: `${textSize}px`,
-                transform: `translate(${textPositionX}px, ${textPositionY}px)`,
+                transform: `translate(${textPositionX}px, ${textPositionY}px) rotate(${textRotation}deg)`,
                 textShadow: textOutlineEnabled ? getTextOutlineShadow() : 'none'
               }" @mousedown="startTextDrag" @touchstart="startTextDrag" ref="customText">
                 {{ customText }}
@@ -73,7 +73,19 @@
                 <label>Tamanho da Fonte:</label>
                 <input type="range" min="12" max="46" step="1" v-model="textSize">
               </div>
-
+              <div class="control-group">
+                <label>Rotação do Texto:</label>
+                <div class="btn-group">
+                  <button @click="toggleTextRotation()" :class="['position-btn', textRotation === 0 ? 'active' : '']"
+                    title="Texto Horizontal">
+                    <span class="icon-horizontal"></span>
+                  </button>
+                  <button @click="toggleTextRotation()" :class="['position-btn', textRotation === 90 ? 'active' : '']"
+                    title="Texto Vertical">
+                    <span class="icon-vertical"></span>
+                  </button>
+                </div>
+              </div>
               <div class="control-group">
                 <label>Posição Horizontal:</label>
                 <div class="btn-group">
@@ -164,7 +176,7 @@
               <span v-else>Gerando PDF...</span>
             </button>
           </div>
-          
+
         </div>
       </div>
     </div>
@@ -186,6 +198,8 @@ export default {
       textOutlineColors: ['#000000', '#FFFFFF', '#F5A623', '#6C63FF', '#FF5678', '#4CAF50', '#9C27B0'],
       selectedTextColorIndex: 0,
       isExporting: false,
+      textOrientation: 'horizontal',
+      textRotation: 0,
       showExportingIndicator: false,
       deviceDisplaySizes: {
         'iphone-15-pro-max': { width: 200, height: 410 },
@@ -275,6 +289,11 @@ export default {
     }
   },
   methods: {
+    toggleTextRotation() {
+      this.textRotation = this.textRotation === 0 ? 90 : 0;
+      this.textPositionX = 0;
+      this.textPositionY = 0;
+    },
     async exportToPDF() {
       try {
         if (!this.$refs.phoneMockup) {
@@ -964,7 +983,7 @@ export default {
   border-radius: 25px;
   border: 4px solid var(--dark);
   transform: scale(1.2);
-  margin:50px 0;
+  margin: 50px 0;
   position: relative;
   overflow: hidden;
   display: flex;
@@ -1072,20 +1091,45 @@ export default {
   }
 }
 
+.icon-horizontal::before {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 50%;
+  width: 10px;
+  height: 2px;
+  background-color: currentColor;
+  transform: translateY(-50%);
+}
+
+.icon-vertical::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 2px;
+  width: 2px;
+  height: 10px;
+  background-color: currentColor;
+  transform: translateX(-50%);
+}
+
 @media (max-width: 768px) {
   .section {
     padding: 3rem 0;
   }
+
   .customizer-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
   .customizer-form {
     padding: 2rem;
     border-radius: 8px;
     margin: 0 auto;
   }
+
   .phone-mockup {
     width: 100%;
   }

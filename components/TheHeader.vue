@@ -2,8 +2,8 @@
   <header>
     <div class="container nav-container">
       <a href="#" class="logo"><img src="../assets/logo.png" width="120" alt=""></a>
-      
-      <!-- Botão do menu hambúrguer (visível apenas em mobile) -->
+
+
       <button class="menu-toggle" @click="toggleMobileMenu" aria-label="Menu">
         <span class="hamburger-icon" :class="{ 'active': mobileMenuOpen }">
           <span></span>
@@ -11,8 +11,7 @@
           <span></span>
         </span>
       </button>
-      
-      <!-- Menu (desktop e mobile) -->
+
       <ul class="menu" :class="{ 'menu-mobile': mobileMenuOpen }">
         <li class="menu-item" v-for="(item, index) in menuItems" :key="index">
           <a :href="item.link" class="menu-link" :class="{ active: item.active }" @click="closeMobileMenu">
@@ -20,9 +19,10 @@
           </a>
         </li>
       </ul>
-      
+
       <button class="cart-btn" @click="openCart">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="9" cy="21" r="1"></circle>
           <circle cx="20" cy="21" r="1"></circle>
           <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
@@ -50,7 +50,7 @@ export default {
   },
   methods: {
     openCart() {
-      alert('Carrinho aberto')
+      this.$emit('open-cart');
     },
     toggleMobileMenu() {
       this.mobileMenuOpen = !this.mobileMenuOpen;
@@ -68,7 +68,7 @@ export default {
     window.addEventListener('add-to-cart', () => {
       this.cartCount += 1
     });
-    
+
     // Fechar menu ao redimensionar para desktop
     window.addEventListener('resize', () => {
       if (window.innerWidth > 768 && this.mobileMenuOpen) {
@@ -102,7 +102,8 @@ header {
   text-decoration: none;
   display: flex;
   align-items: center;
-  z-index: 102; /* Manter logo visível acima do menu mobile */
+  z-index: 102;
+  /* Manter logo visível acima do menu mobile */
 }
 
 .logo span {
@@ -131,7 +132,8 @@ header {
   border: 2px solid transparent;
 }
 
-.menu-link:hover, .menu-link.active {
+.menu-link:hover,
+.menu-link.active {
   border: 2px solid var(--primary);
   color: var(--primary);
 }
@@ -141,7 +143,8 @@ header {
   border: none;
   cursor: pointer;
   position: relative;
-  z-index: 102; /* Manter carrinho visível acima do menu mobile */
+  z-index: 102;
+  /* Manter carrinho visível acima do menu mobile */
 }
 
 .cart-count {
@@ -161,12 +164,14 @@ header {
 
 /* Estilos para menu mobile */
 .menu-toggle {
-  display: none; /* Esconder por padrão */
+  display: none;
+  /* Esconder por padrão */
   background: none;
   border: none;
   cursor: pointer;
   padding: 10px;
-  z-index: 102; /* Acima do menu mobile */
+  z-index: 102;
+  /* Acima do menu mobile */
 }
 
 .hamburger-icon {
@@ -205,7 +210,7 @@ header {
   .menu-toggle {
     display: block;
   }
-  
+
   .menu {
     position: fixed;
     top: 0;
@@ -220,21 +225,21 @@ header {
     transition: transform 0.3s ease;
     z-index: 100;
   }
-  
+
   .menu-mobile {
     transform: translateX(0);
-    box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
   }
-  
+
   .menu-item {
     margin: 15px 0;
   }
-  
+
   .menu-link {
     font-size: 18px;
     padding: 12px 20px;
   }
-  
+
   .nav-container {
     padding: 0 20px;
   }
